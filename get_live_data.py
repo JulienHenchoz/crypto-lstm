@@ -1,45 +1,30 @@
 import ssl
 import sys
 import time
-import urllib.request, json
-import pandas as pd
-import krakenex
+from datetime import datetime
 
-from utils.dataset import add_indicators, predict
+from classes.exchanges.kraken import Kraken
+from classes.trading_bot import TradingBot
+from utils.constants import PAST_HISTORY, INTERVAL, PAIR, MODEL_FILE
 
-ctx = ssl.create_default_context()
-ctx.check_hostname = False
-ctx.verify_mode = ssl.CERT_NONE
+exchange =  Kraken()
+trading_bot = TradingBot(
+    exchange=exchange,
+    pair=PAIR,
+    interval=INTERVAL,
+    past_history=PAST_HISTORY,
+    model_file=MODEL_FILE
+)
 
-def get_raw_data(pair, hours_back, interval = 60):
+trading_bot.predict_price(timestamp=datetime.fromisoformat('2020-11-27 23:00:01').timestamp())
 
-    seconds_back = int(hours_back) * 60 * 60
-    from_timetamp = int(time.time()) - seconds_back
-    k = krakenex.API()
-    return k.query_public('OHLC', {
-        'pair': pair,
-        'interval': 60,
-        'since': from_timetamp
-    })['result'][pair]
 
-pair = sys.argv[1]
-hours_back = sys.argv[2]
-ohlc = get_raw_data(pair, hours_back)
+#df = df.tail(PAST_HISTORY)
+#print(df)
+exit()
 
-columns = ['datetime', 'open', 'high', 'low', 'close', 'vwap', 'volume', 'count']
-df = pd.DataFrame(ohlc, columns = columns)
-df = df.astype(float)
+predictions, y = dataset.predict(df, './models/reference_model', with_y=False)
 
-df = add_indicators(df)
-df.dropna(inplace=True)
-df.pop('vwap')
-df.pop('count')
-df.pop('open')
-df.pop('high')
-df.pop('low')
-df.pop('volume')
-
-predictions, y = predict(df, './reference_model', with_y=False)
-
+print(dataset.get_trend_success_rate(predictions, y, df))
 print(df)
 print(predictions)

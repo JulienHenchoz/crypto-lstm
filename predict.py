@@ -2,12 +2,10 @@ import sys
 import pandas as pd
 import numpy as np
 from matplotlib.pyplot import figure
-from sklearn.preprocessing import MinMaxScaler
 import seaborn as sns
 from matplotlib import pyplot as plt
-from tensorflow.python.keras.models import load_model
 
-from utils.dataset import Dataset
+from classes.dataset import Dataset
 
 file_name = sys.argv[1]
 
@@ -16,16 +14,13 @@ df = pd.read_csv(file_name, index_col=None)
 df = df.sort_values('datetime')
 
 df = df.dropna()
-df = df[0:1000]
+#df = df[22000:22300]
 
 # Number of features for prediction
 features_count = df.shape[1]
 
 # Make predictions using the reference model
 predictions_reference, y = dataset.predict(df, './models/reference_model', True)
-print('Mean error reference : ' + str(dataset.mean_error(np.array(predictions_reference), y)))
-success_rate_reference = dataset.get_trend_success_rate(predictions_reference, y, df)
-print ('Trend prediction success for reference : ' + str(success_rate_reference) + '%')
 
 # Make predictions using the latest model if available
 try:
@@ -38,6 +33,12 @@ except:
     has_latest_model = False
     predictions_latest = None
     pass
+
+
+print('Mean error reference : ' + str(dataset.mean_error(np.array(predictions_reference), y)))
+success_rate_reference = dataset.get_trend_success_rate(predictions_reference, y, df)
+print ('Trend prediction success for reference : ' + str(success_rate_reference) + '%')
+
 
 figure(num=None, figsize=(24, 10), dpi=80, facecolor='w', edgecolor='k')
 

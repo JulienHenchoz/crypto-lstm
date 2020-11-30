@@ -38,7 +38,6 @@ class Dataset:
 
         return predictions, y
 
-
     @staticmethod
     def add_indicators(df):
         df['rsi'] = talib.RSI(np.array(df['close']))
@@ -84,12 +83,13 @@ class Dataset:
     @staticmethod
     def get_trend_success_rate(predictions, reality, df):
         successes = 0
+
         for i in range(len(reality)):
             predicted_value = predictions.values[i][0]
             future_value = reality[i]
             initial_price = df['close'].values[i]
-
             if (predicted_value > initial_price and future_value > initial_price) or (predicted_value < initial_price and future_value < initial_price):
                 successes += 1
+
 
         return float(successes * 100 / len(reality))

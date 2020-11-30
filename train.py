@@ -7,41 +7,43 @@ from matplotlib.pyplot import figure
 from sklearn.preprocessing import MinMaxScaler
 from keras.models import Sequential
 from keras.optimizers import Adam
-from keras.layers import Dense, LSTM, LeakyReLU, Dropout
+from keras.layers import Dense, LSTM, Dropout
 import tensorflow as tf
 import seaborn as sns
 from matplotlib import pyplot as plt
-from tensorflow.python.keras.models import load_model
 
-from utils.dataset import Dataset
+from classes.dataset import Dataset
 
 file_name = sys.argv[1]
 
-df = pd.read_csv(file_name, index_col=None)
-df = df.sort_values('datetime')
+def load_file(file_name):
+    df = pd.read_csv(file_name, index_col=None)
+    df = df.sort_values('datetime')
+    df.pop('datetime')
+    df = df.dropna()
+    return df, np.array(df)
 
-frame_datetime = df.pop('datetime')
-df = df.dropna()
-min_max_scaler = MinMaxScaler()
-y_min_max_scaler = MinMaxScaler()
-df_array = np.array(df)
+df, df_array = load_file(file_name)
 #df_array = df[0:20000]
 
+min_max_scaler = MinMaxScaler()
+y_min_max_scaler = MinMaxScaler()
+
 scaled = min_max_scaler.fit_transform(df_array)
+
 y_min_max_scaler.fit(df_array[:,0:1])
 
 close_index = 0
 
-do_train = True
 # Number of features for prediction
 features_count = df_array.shape[1]
-num_units = 48
+num_units = 64
 learning_rate = 0.0001
 activation_function = 'sigmoid'
 adam = Adam(lr=learning_rate)
 loss_function = 'mse'
 batch_size = 256
-num_epochs = 50
+num_epochs = 100
 
 # Train on 80% of the dataset
 train_split = int(df_array.shape[0] * 0.8)
@@ -57,7 +59,9 @@ def train(x_train, y_train, x_test, y_test):
     model = Sequential()
     model.add(LSTM(units=num_units, return_sequences=True, input_shape=(None, features_count)))
     model.add(Dropout(0.5))
-    model.add(LSTM(units=num_units, return_sequences=True, input_shape=(None, features_count)))
+    model.add(LSTM(units=num_units, return_sequences=True))
+    model.add(Dropout(0.5))
+    model.add(LSTM(units=num_units, return_sequences=True))
     model.add(Dropout(0.5))
     model.add(LSTM(units=num_units))
     model.add(Dense(units=1))
